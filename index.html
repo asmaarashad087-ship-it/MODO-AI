@@ -302,6 +302,7 @@ section.panel.plain{background:transparent;border:0;padding:0;box-shadow:none}
 }
 @media(max-width:560px){.top h1 small,.bell{display:none}.top h1{font-size:1rem}.avatar{width:36px;height:36px}.amenu{min-width:190px}}
 </style>
+<script src="ai-assistant.js"></script>
 </head>
 <body>
 <style>
@@ -591,11 +592,16 @@ function sheetView(){const B=lang==="ar";return `<h2>${t("sheet")}</h2><p class=
 <details class="lb"><summary>${B?"شوف بنود الشيت":"View the sheet sections"}</summary><pre id="shq" style="white-space:pre-wrap;font:inherit;font-size:.85rem">${esc(SHEETS[0].q)}</pre></details>
 <label class="lb">${B?"السيناريو (بيانات الحالة)":"Scenario (case data)"}</label><textarea id="shc" rows="8"></textarea>
 <div class="ctl"><button class="btn" onclick="shGo()">${B?"حلّ الشيت":"Solve the sheet"}</button><button class="btn alt" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('sho').textContent)">${B?"نسخ":"Copy"}</button></div><div class="msg a" id="sho" style="margin-top:12px;max-width:100%" hidden></div>`}
-function aiErrMsg(e){const B=lang==="ar";
-if(e&&e.code==="not_granted")return B?"⚠️ المساعد محتاج إذن منك أول مرة. جرّبي تعملي Reload كامل للصفحة (مش بس تدوسي تاني) وابعتي السؤال تاني — هيظهرلك طلب إذن اقبليه.":"⚠️ The assistant needs your permission first. Try a full page reload (not just clicking again) and resend your question — a permission prompt should appear; please accept it.";
-if(e&&e.code==="rate_limited")return B?"⚠️ في ضغط على المساعد دلوقتي، جرّبي تاني بعد شوية.":"⚠️ The assistant is rate-limited right now — try again in a bit.";
-if(e&&e.code)return (B?`⚠️ خطأ من المساعد (${e.code}). جرّبي تاني.`:`⚠️ Assistant error (${e.code}). Please try again.`);
-return B?"⚠️ المساعد مش متاح دلوقتي في الصفحة دي. جرّبي تعملي Reload كامل للصفحة (مش بس دوسي تاني) وابعتي أول سؤال تاني — المفروض يظهرلك طلب إذن تقبليه.":"⚠️ The assistant isn't available on this page load. Try a full page reload (not just clicking again) and resend your first question — a permission prompt should appear; please accept it."}
+function aiErrMsg(e){const B=lang==="ar",c=e&&e.code;
+const M={cancelled:["⚠️ محتاج مفتاح Anthropic API عشان المساعد يشتغل. جرّب تبعت السؤال تاني وأدخل المفتاح.","⚠️ The assistant needs your Anthropic API key. Send your question again and enter the key."],
+invalid_key:["⚠️ المفتاح غلط أو منتهي. ابعت السؤال تاني وأدخل مفتاح صحيح.","⚠️ The API key is invalid or expired. Send again and enter a valid key."],
+no_credit:["⚠️ رصيد حساب Anthropic خلص. اشحن رصيد من console.anthropic.com ← Billing وجرّب تاني.","⚠️ Your Anthropic credit balance is empty. Add credit at console.anthropic.com → Billing and try again."],
+rate_limited:["⚠️ في ضغط دلوقتي، جرّب تاني بعد شوية.","⚠️ Rate-limited right now — try again in a bit."],
+overloaded:["⚠️ خدمة Claude مشغولة، جرّب تاني بعد لحظات.","⚠️ Claude is busy — try again in a moment."],
+net:["⚠️ تعذّر الاتصال، اتأكد من الإنترنت وجرّب تاني.","⚠️ Connection failed — check your internet and try again."]};
+if(c&&M[c])return M[c][B?0:1];
+if(c)return B?`⚠️ خطأ من المساعد (${c}). جرّب تاني.`:`⚠️ Assistant error (${c}). Please try again.`;
+return B?"⚠️ المساعد مش متاح دلوقتي. تأكد إن ملف ai-assistant.js مرفوع جنب index.html وأعد تحميل الصفحة.":"⚠️ The assistant isn't available. Make sure ai-assistant.js is uploaded next to index.html and reload."}
 async function shGo(){const S=SHEETS[+document.getElementById("sh").value],c=document.getElementById("shc").value.trim(),o=document.getElementById("sho");if(!c)return;o.hidden=false;o.textContent=t("think");
 try{const sm=await claude.use("sample");if(!sm){o.textContent=aiErrMsg(null);return}
 await sm("You are a clinical instructor at a Technical Institute of Nursing completing an OB/GYN nursing student sheet from a case scenario. Fill EVERY section of the sheet below, in the same numbering and order, one 'field: value' per line. Use only facts stated in the scenario; write 'Not mentioned' for anything absent and never invent clinical values. Compute EDD by Naegele's rule and the gestational age when an LMP is given. For yes/no items answer yes or no. For the nursing care plan give 3 to 5 prioritized nursing diagnoses, each with goal, interventions with rationale, and evaluation. For health education give clear numbered points tailored to the case. For the PARTOGRAPH, list the hourly recordings the scenario supports and state whether progress stays left of, on, or right of the alert and action lines; if the scenario has too little data, say what is missing. Plain text only, no markdown symbols. Reply in the language of the scenario; if Arabic, use friendly Egyptian Arabic and keep medical terms in English. End with one line reminding the student to review the answers with the instructor.\n\nSHEET: "+S.name+"\n"+S.q+"\n\nSCENARIO:\n"+c,{cache:false,modelTier:"complex",onText:r=>{o.textContent=r.text}})}catch(e){o.textContent=aiErrMsg(e)}}
