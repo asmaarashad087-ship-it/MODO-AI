@@ -8,7 +8,7 @@
  * لو الصفحة اتفتحت جوه claude.ai (اللي فيها claude.use جاهز) الملف ده مش بيعمل حاجة.
  *
  * إعدادات اختيارية (حطها في index.html قبل تحميل الملف ده):
- *   <script>window.MODO_AI = { proxy: "https://your-worker.workers.dev", model_complex: "claude-sonnet-5-5" }</script>
+ *   window.MODO_AI = { proxy: "https://your-worker.workers.dev", model_complex: "claude-sonnet-5-5" };
  *   - proxy : لو عاوزة تستخدمي سيرفر وسيط بمفتاحك انتِ (الطلاب مش هيدخلوا مفتاح).
  */
 (function () {
