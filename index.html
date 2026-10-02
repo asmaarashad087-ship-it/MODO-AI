@@ -4108,7 +4108,7 @@ function draw(){const S=D.stats,L=[['👁 زوّار المنصة',S.visitors],[
  document.getElementById('adx').onclick=close;document.getElementById('adr').onclick=()=>load((sessionStorage.getItem('modo_ap')||''));document.getElementById('adv').onclick=csv;
  box.querySelectorAll('.ad-f button').forEach(b=>b.onclick=()=>{flt=b.dataset.k;draw()});const si=document.getElementById('ads');si.oninput=()=>{q=si.value;rows()};rows()}
 function list(){const f=F[flt][1],k=q.trim().toLowerCase();return D.students.filter(s=>f(s)&&(!k||(s.n+' '+s.p).toLowerCase().includes(k)))}
-function rows(){const a=list();document.getElementById('adt').innerHTML=`<table><tr><th>#</th><th>الاسم</th><th>الموبايل</th><th>الحالة</th><th>الجهاز</th><th>آخر دخول</th><th>فتح المجاني</th><th>وقت التسجيل</th><th>الكود</th></tr>${a.map((s,i)=>`<tr><td>${i+1}</td><td>${E(s.n)}</td><td dir="ltr" style="text-align:right">${E(s.p)}</td><td>${pill(s.s)}</td><td>${s.dev?'<span class="ad-p ok">مربوط</span>':'<span class="ad-p n">—</span>'}</td><td>${E(s.ll)||'—'}</td><td>${s.f?'<span class="ad-p ok">'+E(s.f)+'</span>':'<span class="ad-p n">لا</span>'}</td><td>${E(s.rt)||'—'}</td><td>${s.s==='pending'?'<button class="ad-b" data-ap="'+E(s.p)+'">إصدار كود</button>':'<b dir="ltr">'+E(s.c)+'</b>'}</td></tr>`).join('')||'<tr><td colspan="9" style="padding:14px;color:#5d7190">لا توجد نتائج</td></tr>'}</table>`}
+function rows(){const a=list();document.getElementById('adt').innerHTML=`<table><tr><th>#</th><th>الاسم</th><th>الموبايل</th><th>الحالة</th><th>الجهاز</th><th>آخر دخول</th><th>فتح المجاني</th><th>وقت التسجيل</th><th>الكود</th></tr>${a.map((s,i)=>`<tr><td>${i+1}</td><td>${E(s.n)}</td><td dir="ltr" style="text-align:right">${E(s.p)}</td><td>${pill(s.s)}</td><td>${s.dev?'<span class="ad-p ok">مربوط</span>':'<span class="ad-p n">—</span>'}</td><td>${E(s.ll)||'—'}</td><td>${s.f?'<span class="ad-p ok">'+E(s.f)+'</span>':'<span class="ad-p n">لا</span>'}</td><td>${E(s.rt)||'—'}</td><td>${s.s==='pending'?'<button class="ad-b" data-ap="'+E(s.p)+'">إصدار كود</button>':'<b dir="ltr" class="ad-cp" data-cp="'+E(s.c)+'" title="اضغط للنسخ">'+E(s.c)+' 📋</b>'}</td></tr>`).join('')||'<tr><td colspan="9" style="padding:14px;color:#5d7190">لا توجد نتائج</td></tr>'}</table>`}
 function csv(){const a=list(),h='الاسم,الموبايل,الحالة,جهاز مربوط,آخر دخول,فتح المجاني,وقت التسجيل',r=a.map(s=>[s.n,'\t'+s.p,s.s,s.dev?'نعم':'لا',s.ll,s.f,s.rt].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
  const u=URL.createObjectURL(new Blob(['\ufeff'+h+'\n'+r.join('\n')],{type:'text/csv;charset=utf-8'})),l=document.createElement('a');l.href=u;l.download='modo-students.csv';l.click();setTimeout(()=>URL.revokeObjectURL(u),2000)}
 function open(){if(box)return;if(!document.getElementById('adm-css')){const st=document.createElement('style');st.id='adm-css';st.textContent=css;document.head.appendChild(st)}
@@ -4407,13 +4407,23 @@ new MutationObserver(()=>{if(!document.getElementById('adm'))return;const w=$('#
 })();
 
 </script>
+<style>.ad-cp{cursor:pointer;user-select:none;-webkit-user-select:none;background:#eef3fb;border:1px dashed #9db4d6;border-radius:8px;padding:2px 9px;display:inline-block;transition:.15s}.ad-cp:hover{background:#dff5e7;border-color:#2e9e5b}.ad-cp.ok{background:#dff5e7;color:#14602f;border-color:#2e9e5b}</style>
+<script>
+/* نسخ الكود بضغطة */
+async function modoCopy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){}
+try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(a);a.select();const ok=document.execCommand('copy');a.remove();return ok}catch(e){return false}}
+document.addEventListener('click',async e=>{const c=e.target.closest&&e.target.closest('.ad-cp');if(!c)return;
+const t=c.dataset.cp,old=c.textContent,ok=await modoCopy(t);c.textContent=ok?'✓ تم النسخ':'⚠ انسخه يدوي: '+t;c.classList.toggle('ok',ok);
+setTimeout(()=>{c.textContent=old;c.classList.remove('ok')},1400)});
+</script>
 <script>
 /* إصدار كود لطالب مستني: بيعمل الكود ويفتح واتساب برسالة جاهزة */
 document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-ap]');if(!b)return;b.disabled=true;b.textContent='…';
 const r=await MODO_RPC({a:'approve',pass:sessionStorage.getItem('modo_ap')||'',phone:b.dataset.ap});
 if(!r.ok){alert('تعذّر إصدار الكود');b.disabled=false;b.textContent='إصدار كود';return}
 const w='2'+r.phone.replace(/^0/,''),m='أهلاً '+r.name.split(' ')[0]+' 👋\nكودك الشخصي في منصة MODO: '+r.code+'\nادخل بيه من تبويب «دخول» بنفس اسمك المسجّل.';
-if(confirm('الكود: '+r.code+'\nتفتح واتساب لإرساله؟'))window.open('https://wa.me/'+w+'?text='+encodeURIComponent(m));
+const cpd=await modoCopy(r.code);
+if(confirm('الكود: '+r.code+(cpd?' (اتنسخ ✓)':'')+'\nتفتح واتساب لإرساله؟'))window.open('https://wa.me/'+w+'?text='+encodeURIComponent(m));
 const rf=document.getElementById('adr');if(rf)rf.click()});
 </script>
 </body>
