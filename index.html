@@ -4108,7 +4108,7 @@ function draw(){const S=D.stats,L=[['👁 زوّار المنصة',S.visitors],[
  document.getElementById('adx').onclick=close;document.getElementById('adr').onclick=()=>load((sessionStorage.getItem('modo_ap')||''));document.getElementById('adv').onclick=csv;
  box.querySelectorAll('.ad-f button').forEach(b=>b.onclick=()=>{flt=b.dataset.k;draw()});const si=document.getElementById('ads');si.oninput=()=>{q=si.value;rows()};rows()}
 function list(){const f=F[flt][1],k=q.trim().toLowerCase();return D.students.filter(s=>f(s)&&(!k||(s.n+' '+s.p).toLowerCase().includes(k)))}
-function rows(){const a=list();document.getElementById('adt').innerHTML=`<table><tr><th>#</th><th>الاسم</th><th>الموبايل</th><th>الحالة</th><th>الجهاز</th><th>آخر دخول</th><th>فتح المجاني</th><th>وقت التسجيل</th><th>الكود</th></tr>${a.map((s,i)=>`<tr><td>${i+1}</td><td>${E(s.n)}</td><td dir="ltr" style="text-align:right">${E(s.p)}</td><td>${pill(s.s)}</td><td>${s.dev?'<span class="ad-p ok">مربوط</span>':'<span class="ad-p n">—</span>'}</td><td>${E(s.ll)||'—'}</td><td>${s.f?'<span class="ad-p ok">'+E(s.f)+'</span>':'<span class="ad-p n">لا</span>'}</td><td>${E(s.rt)||'—'}</td><td>${s.s==='pending'?'<button class="ad-b" data-ap="'+E(s.p)+'">إصدار كود</button>':'<b dir="ltr" class="ad-cp" data-cp="'+E(s.c)+'" title="اضغط للنسخ">'+E(s.c)+' 📋</b>'}</td></tr>`).join('')||'<tr><td colspan="9" style="padding:14px;color:#5d7190">لا توجد نتائج</td></tr>'}</table>`}
+function rows(){const a=list();document.getElementById('adt').innerHTML=`<table><tr><th>#</th><th>الاسم</th><th>الموبايل</th><th>الحالة</th><th>الجهاز</th><th>آخر دخول</th><th>فتح المجاني</th><th>وقت التسجيل</th><th>الكود</th><th>إجراءات</th></tr>${a.map((s,i)=>`<tr><td>${i+1}</td><td>${E(s.n)}</td><td dir="ltr" style="text-align:right">${E(s.p)}</td><td>${pill(s.s)}</td><td>${s.dev?'<span class="ad-p ok">مربوط</span>':'<span class="ad-p n">—</span>'}</td><td>${E(s.ll)||'—'}</td><td>${s.f?'<span class="ad-p ok">'+E(s.f)+'</span>':'<span class="ad-p n">لا</span>'}</td><td>${E(s.rt)||'—'}</td><td>${s.s==='pending'?'<button class="ad-b" data-ap="'+E(s.p)+'">إصدار كود</button>':'<b dir="ltr" class="ad-cp" data-cp="'+E(s.c)+'" title="اضغط للنسخ">'+E(s.c)+' 📋</b>'}</td><td>${window.modoActs?modoActs(s):''}</td></tr>`).join('')||'<tr><td colspan="10" style="padding:14px;color:#5d7190">لا توجد نتائج</td></tr>'}</table>`}
 function csv(){const a=list(),h='الاسم,الموبايل,الحالة,جهاز مربوط,آخر دخول,فتح المجاني,وقت التسجيل',r=a.map(s=>[s.n,'\t'+s.p,s.s,s.dev?'نعم':'لا',s.ll,s.f,s.rt].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
  const u=URL.createObjectURL(new Blob(['\ufeff'+h+'\n'+r.join('\n')],{type:'text/csv;charset=utf-8'})),l=document.createElement('a');l.href=u;l.download='modo-students.csv';l.click();setTimeout(()=>URL.revokeObjectURL(u),2000)}
 function open(){if(box)return;if(!document.getElementById('adm-css')){const st=document.createElement('style');st.id='adm-css';st.textContent=css;document.head.appendChild(st)}
@@ -4415,6 +4415,34 @@ try{const a=document.createElement('textarea');a.value=t;a.style.cssText='positi
 document.addEventListener('click',async e=>{const c=e.target.closest&&e.target.closest('.ad-cp');if(!c)return;
 const t=c.dataset.cp,old=c.textContent,ok=await modoCopy(t);c.textContent=ok?'✓ تم النسخ':'⚠ انسخه يدوي: '+t;c.classList.toggle('ok',ok);
 setTimeout(()=>{c.textContent=old;c.classList.remove('ok')},1400)});
+</script>
+<style>.ad-x{border:0;border-radius:8px;padding:5px 9px;margin:2px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;background:#e8eef9;color:#1d3c78}.ad-x:hover{filter:brightness(.95)}.ad-x.w{background:#fff1d6;color:#8a5a00}.ad-x.r{background:#fde4e4;color:#a02020}.ad-x.g{background:#dff5e7;color:#14602f}.ad-x:disabled{opacity:.5;cursor:wait}</style>
+<script>
+/* أزرار إجراءات الطالب في لوحة الأدمن: فك ربط الجهاز / كود جديد / إيقاف وتفعيل */
+window.modoActs=function(s){
+ if(s.s==='pending'||!s.c)return '<span style="color:#9aa8bd">—</span>';
+ const q=x=>String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'),
+ d='data-c="'+q(s.c)+'" data-n="'+q(s.n)+'" data-p="'+q(s.p)+'"';
+ return (s.dev?'<button class="ad-x w" data-act="reset" '+d+'>🔓 فك الجهاز</button>':'')
+  +'<button class="ad-x" data-act="newcode" '+d+'>🔑 كود جديد</button>'
+  +(s.s==='blocked'?'<button class="ad-x g" data-act="unblock" '+d+'>✅ تفعيل</button>':'<button class="ad-x r" data-act="block" '+d+'>⛔ إيقاف</button>')};
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-act]');if(!b)return;
+ const act=b.dataset.act,c=b.dataset.c,n=b.dataset.n,pass=sessionStorage.getItem('modo_ap')||'';
+ const msgs={reset:'فك ربط الجهاز للطالب «'+n+'»؟\nهيقدر يدخل بكوده من جهاز جديد.',
+  newcode:'إصدار كود جديد للطالب «'+n+'»؟\nالكود القديم هيتلغي، وهيتفك ربط جهازه ويتسجّل خروجه، وبياناته بتفضل زي ما هي.',
+  block:'إيقاف «'+n+'» مؤقتًا؟\nمش هيقدر يدخل لحد ما تفعّله تاني.',
+  unblock:'تفعيل «'+n+'» تاني؟'};
+ if(!confirm(msgs[act]))return;
+ const old=b.textContent;b.disabled=true;b.textContent='…';
+ const body={reset:{a:'reset',code:c},newcode:{a:'newcode',code:c},block:{a:'setstatus',code:c,kind:'blocked'},unblock:{a:'setstatus',code:c,kind:'active'}}[act];
+ const r=await MODO_RPC(Object.assign({pass:pass},body));
+ if(!r.ok){alert(r.err==='unknown'?'الخادم لسه مش متحدّث: شغّل ملف modo_admin_upgrade.sql في Supabase الأول.':r.err==='auth'?'الباسورد غير صحيح':r.err==='nf'?'الطالب مش موجود (اعمل تحديث للقائمة)':'تعذّر تنفيذ الإجراء');b.disabled=false;b.textContent=old;return}
+ if(act==='newcode'){const cpd=await modoCopy(r.code);
+  if(r.phone&&confirm('الكود الجديد: '+r.code+(cpd?' (اتنسخ ✓)':'')+'\nتفتح واتساب لإرساله لـ '+r.name+'؟')){
+   const w='2'+String(r.phone).replace(/^0/,''),m='أهلاً '+r.name.split(' ')[0]+' 👋\nكودك الجديد في منصة MODO: '+r.code+'\nادخل بيه من تبويب «دخول» بنفس اسمك المسجّل.';
+   window.open('https://wa.me/'+w+'?text='+encodeURIComponent(m))}
+  else if(!r.phone)alert('الكود الجديد: '+r.code+(cpd?' (اتنسخ ✓)':''))}
+ const rf=document.getElementById('adr');if(rf)rf.click()});
 </script>
 <script>
 /* إصدار كود لطالب مستني: بيعمل الكود ويفتح واتساب برسالة جاهزة */
